@@ -733,7 +733,7 @@
 
             const width = rect.width;
             const height = rect.height;
-            const padding = 40; // Increased padding for dual axis labels
+            const padding = 60; // Increased padding for dual axis labels
 
             // Clear
             ctx.clearRect(0, 0, width, height);
@@ -765,7 +765,9 @@
             const getX_Wpm = (i) => padding + (i / (totalDuration - 1)) * (width - 2 * padding);
             
             // Helper to get X position for raw time (Latency)
-            const getX_Time = (t) => padding + (t / (totalDuration - 1)) * (width - 2 * padding);
+            // Scale based on the actual max timestamp recorded to ensure it fits the graph width
+            const maxLatTime = rawLat.length > 0 ? rawLat[rawLat.length - 1].t : 1;
+            const getX_Time = (t) => padding + (t / maxLatTime) * (width - 2 * padding);
             
             // Y-axis 1: WPM (Left)
             const getY_Wpm = (val) => height - padding - (val / maxWpm) * (height - 2 * padding);
@@ -844,12 +846,12 @@
             const mid = width / 2;
             
             // Green Dot
-            ctx.beginPath(); ctx.arc(mid - 60, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#34d399' : '#059669'; ctx.fill();
-            ctx.fillStyle = isDark ? '#e2e8f0' : '#334155'; ctx.textAlign = 'left'; ctx.fillText("Speed", mid - 50, 13);
+            ctx.beginPath(); ctx.arc(mid - 80, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#34d399' : '#059669'; ctx.fill();
+            ctx.fillStyle = isDark ? '#e2e8f0' : '#334155'; ctx.textAlign = 'left'; ctx.fillText("Speed", mid - 70, 13);
             
             // Red Dot
-            ctx.beginPath(); ctx.arc(mid + 10, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#fb7185' : '#e11d48'; ctx.fill();
-            ctx.fillText("Delay between key strokes", mid + 20, 13);
+            ctx.beginPath(); ctx.arc(mid, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#fb7185' : '#e11d48'; ctx.fill();
+            ctx.fillText("Delay between key strokes", mid + 10, 13);
         }
 
         // --- Renderers ---
