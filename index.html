@@ -130,7 +130,7 @@
                 
                 <!-- Start Overlay -->
                 <div id="start-overlay" class="absolute inset-0 rounded-xl flex items-center justify-center bg-black/5 dark:bg-black/20 z-10 backdrop-blur-[1px] pointer-events-none transition-opacity duration-300">
-                    <span class="text-lg font-medium text-slate-600 dark:text-slate-300">Click or Start Typing to Begin</span>
+                    <span class="text-lg font-medium text-slate-600 dark:text-slate-300">Start Typing to Begin</span>
                 </div>
 
                 <!-- Text Display -->
@@ -224,6 +224,7 @@
             wpm: 0,
             accuracy: 100,
             mistakes: 0,
+            totalKeystrokes: 0, // Track every physical key press
             history: []
         };
 
@@ -282,6 +283,26 @@
             els.themeToggle.addEventListener('click', toggleTheme);
             els.input.addEventListener('input', handleInput);
             
+            // KEYDOWN Listener for strict keystroke counting
+            els.input.addEventListener('keydown', (e) => {
+                if (state.gameState === 'finished') return;
+                
+                // If game hasn't started, first keypress starts it
+                if (state.gameState === 'idle') {
+                    // Start game logic is handled in handleInput usually, but we need to count this first key
+                    // We'll let handleInput start the game state, but we count the key here if it's valid
+                }
+
+                // Count Backspace
+                if (e.key === 'Backspace') {
+                    state.totalKeystrokes++;
+                } 
+                // Count any single character key (excluding meta keys)
+                else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    state.totalKeystrokes++;
+                }
+            });
+            
             // Focus hack
             els.gameView.addEventListener('click', () => {
                 if (state.gameState !== 'finished') els.input.focus();
@@ -317,8 +338,6 @@
             // UI
             Object.keys(els.btns).forEach(key => {
                 const btn = els.btns[key];
-                const activeClass = document.documentElement.classList.contains('dark') ? 'bg-slate-700' : 'bg-white';
-                const inactiveClass = 'text-slate-500';
                 
                 // Reset basic styles
                 btn.className = `px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200`;
@@ -351,6 +370,7 @@
             state.wpm = 0;
             state.accuracy = 100;
             state.mistakes = 0;
+            state.totalKeystrokes = 0; // Reset total keystrokes
 
             if (state.timerId) clearInterval(state.timerId);
             
@@ -385,6 +405,7 @@
 
             // Final calc
             calculateStats();
+            updateStatsUI();
 
             // Save History
             const record = {
@@ -417,7 +438,19 @@
             if (state.gameState === 'finished') return;
             if (state.gameState === 'idle') startGame();
 
-            state.userInput = e.target.value;
+            const newInput = e.target.value;
+            
+            // Mistake tracking (Cumulative for the counter): If user typed new chars
+            if (newInput.length > state.userInput.length) {
+                // Loop from the end of the OLD input to the end of the NEW input
+                for (let i = state.userInput.length; i < newInput.length; i++) {
+                    if (newInput[i] !== state.targetText[i]) {
+                        state.mistakes++;
+                    }
+                }
+            }
+
+            state.userInput = newInput;
             calculateStats();
             updateStatsUI();
             renderText();
@@ -429,16 +462,15 @@
 
         function calculateStats() {
             let correct = 0;
-            let incorrect = 0;
             const len = state.userInput.length;
             
             for(let i=0; i<len; i++) {
                 if(state.userInput[i] === state.targetText[i]) correct++;
-                else incorrect++;
             }
 
-            state.mistakes = incorrect;
-            state.accuracy = len > 0 ? Math.round((correct / len) * 100) : 100;
+            // Accuracy = (Correct Characters) / (Total Physical Keystrokes)
+            // state.totalKeystrokes is updated via 'keydown' listener to capture Backspaces and all key presses
+            state.accuracy = state.totalKeystrokes > 0 ? Math.round((correct / state.totalKeystrokes) * 100) : 100;
 
             let timeElapsed = 0;
             if (state.startTime) {
