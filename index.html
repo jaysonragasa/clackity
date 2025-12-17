@@ -71,6 +71,7 @@
                 <button onclick="setDifficulty('easy')" id="btn-easy" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">easy</button>
                 <button onclick="setDifficulty('medium')" id="btn-medium" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white">medium</button>
                 <button onclick="setDifficulty('hard')" id="btn-hard" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">hard</button>
+                <button onclick="setDifficulty('dev')" id="btn-dev" class="px-6 py-2 rounded-md text-sm font-medium uppercase tracking-wider transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">DEV</button>
             </div>
         </div>
 
@@ -209,8 +210,171 @@
                 "algorithm", "bandwidth", "capability", "dashboard", "encryption", "firewall", "gigabyte", "heuristic", "interface", "javascript", "kernel", "latency", "mainframe", "network", "operating", "protocol", "quantum", "runtime", "server", "terminal", "unicode", "virtual", "wireless", "xml", "yield", "zone", "abstraction", "polymorphism", "encapsulation", "inheritance", "recursion", "iteration", "complexity", "optimization", "parameter", "argument", "constructor", "destructor", "middleware", "framework", "library", "dependency", "repository", "version", "control", "asynchronous", "synchronous", "promise", "callback", "await", "fetch", "axios", "graphql", "restful", "endpoint", "controller", "service", "provider", "context", "reducer", "action", "dispatch", "selector", "middleware", "store", "component", "element", "fragment", "portal", "renderer", "hydration", "performance", "scalability", "maintainability", "reliability", "availability", "consistency", "isolation", "durability", "transaction", "constraint", "integrity", "normalization", "indexing", "partitioning", "sharding", "replication", "distribution", "synchronization", "concurrency", "parallelism", "multithreading", "processor", "architecture", "infrastructure", "deployment", "containerization", "virtualization", "orchestration", "microservices", "serverless", "computing", "artificial", "intelligence", "machine", "learning", "neural", "network", "deep", "reinforcement", "supervised", "unsupervised", "classification", "regression", "clustering", "dimensionality", "reduction", "feature", "engineering", "model", "training", "evaluation", "prediction", "inference"
             ]
         };
+        
+        // Code Snippets for DEV Mode
+        const DEV_SNIPPETS = [
+            "public static void main(String[] args) { System.out.println('Hello World'); }",
+            "def factorial(n): return 1 if n == 0 else n * factorial(n - 1)",
+            "const [count, setCount] = useState(0); useEffect(() => { document.title = count; });",
+            "if (user.isValid()) { processTransaction(user); } else { throw new Error('Invalid User'); }",
+            "switch (status) { case 200: return 'OK'; case 404: return 'Not Found'; default: return 'Unknown'; }",
+            "public class Person { private String name; public Person(String n) { this.name = n; } }",
+            "SELECT * FROM users WHERE active = 1 ORDER BY created_at DESC LIMIT 10;",
+            "for (let i = 0; i < array.length; i++) { console.log(array[i]); }",
+            "try { await api.fetchData(); } catch (error) { console.error('Fetch failed', error); }",
+            "import { useState, useEffect } from 'react'; export default function App() { return <div />; }",
+            "let sum = numbers.reduce((acc, curr) => acc + curr, 0);",
+            "items.map(item => <li key={item.id}>{item.name}</li>)",
+            "const { data, error } = useSWR('/api/user', fetcher);",
+            "document.querySelector('.btn').addEventListener('click', e => console.log(e));",
+            "setTimeout(() => { resolve('Done'); }, 1000);",
+            "const copy = [...original, newItem];",
+            "const { name, age, ...rest } = person;",
+            "export const getServerSideProps = async (context) => { return { props: { data } }; }",
+            "router.push({ pathname: '/post/[id]', query: { id: post.id } });",
+            "localStorage.setItem('token', response.data.accessToken);",
+            "[x**2 for x in range(10) if x % 2 == 0]",
+            "with open('file.txt', 'r') as f: content = f.read()",
+            "lambda x, y: x + y",
+            "class Dog(Animal): def speak(self): return 'Woof'",
+            "try: result = 10 / 0 except ZeroDivisionError: print('Error')",
+            "import pandas as pd; df = pd.read_csv('data.csv')",
+            "def decorator(func): def wrapper(): print('Before'); func(); return wrapper",
+            "import numpy as np; arr = np.array([1, 2, 3])",
+            "if __name__ == '__main__': main()",
+            "dictionary = {k: v for k, v in list_of_tuples}",
+            "List<String> names = Arrays.asList(\"John\", \"Jane\", \"Adam\");",
+            "stream.filter(s -> s.startsWith(\"A\")).collect(Collectors.toList());",
+            "public interface Runnable { void run(); }",
+            "try (BufferedReader br = new BufferedReader(new FileReader(file))) { ... }",
+            "Map<String, Integer> map = new HashMap<>(); map.put(\"One\", 1);",
+            "public class Singleton { private static final Singleton INSTANCE = new Singleton(); }",
+            "System.out.printf(\"Age: %d, Name: %s%n\", age, name);",
+            "@Override public String toString() { return \"ID: \" + id; }",
+            "ArrayList<Integer> numbers = new ArrayList<Integer>();",
+            "Thread t = new Thread(() -> System.out.println(\"Running\")); t.start();",
+            "var query = from c in customers where c.City == \"London\" select c;",
+            "public async Task<string> GetDataAsync() { return await client.GetStringAsync(url); }",
+            "public int Age { get; set; } = 30;",
+            "using (var context = new DbContext()) { context.SaveChanges(); }",
+            "Console.WriteLine($\"Hello, {name}. It is {date:d}.\");",
+            "List<int> numbers = new List<int> { 1, 2, 3, 4, 5 };",
+            "if (int.TryParse(input, out int result)) { Console.WriteLine(result); }",
+            "public delegate void Notify(); public event Notify ProcessCompleted;",
+            "var evenNumbers = numbers.Where(n => n % 2 == 0).ToList();",
+            "[HttpPost] public IActionResult Create([FromBody] User user) { ... }",
+            "std::vector<int> v = {1, 2, 3, 4};",
+            "for (auto it = v.begin(); it != v.end(); ++it) { std::cout << *it << ' '; }",
+            "template <typename T> T add(T a, T b) { return a + b; }",
+            "int* ptr = new int; *ptr = 10; delete ptr;",
+            "class Shape { public: virtual void draw() = 0; };",
+            "std::unique_ptr<int> ptr(new int(5));",
+            "std::cout << \"Hello, World!\" << std::endl;",
+            "#include <iostream> #include <vector> #include <string>",
+            "std::sort(v.begin(), v.end(), [](int a, int b) { return a > b; });",
+            "const int& ref = x;",
+            "INSERT INTO users (name, email) VALUES ('John Doe', 'john@example.com');",
+            "UPDATE products SET price = price * 1.1 WHERE category = 'Electronics';",
+            "DELETE FROM orders WHERE order_date < '2022-01-01';",
+            "CREATE TABLE students (id INT PRIMARY KEY, name VARCHAR(100));",
+            "SELECT COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 5;",
+            "SELECT u.name, o.date FROM users u JOIN orders o ON u.id = o.user_id;",
+            "ALTER TABLE employees ADD COLUMN department_id INT;",
+            "DROP TABLE IF EXISTS temp_data;",
+            "GRANT SELECT, INSERT ON database.* TO 'user'@'localhost';",
+            "SELECT DISTINCT country FROM customers ORDER BY country ASC;",
+            "<div class=\"container\" style=\"display: flex; justify-content: center;\">",
+            "<a href=\"https://example.com\" target=\"_blank\" rel=\"noopener noreferrer\">Link</a>",
+            "<input type=\"text\" placeholder=\"Enter your name\" required />",
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+            "@media (max-width: 600px) { .sidebar { display: none; } }",
+            ":root { --primary-color: #3498db; --secondary-color: #2ecc71; }",
+            "<button onclick=\"alert('Clicked!')\">Click Me</button>",
+            "<link rel=\"stylesheet\" href=\"styles.css\">",
+            "<img src=\"image.jpg\" alt=\"Description\" loading=\"lazy\" />",
+            "display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));",
+            "func main() { fmt.Println(\"Hello, World!\") }",
+            "go func() { fmt.Println(\"Async\") }() ",
+            "type Person struct { Name string; Age int }",
+            "if err != nil { log.Fatal(err) }",
+            "ch := make(chan int)",
+            "defer file.Close()",
+            "for i, v := range slice { fmt.Printf(\"%d: %s\\n\", i, v) }",
+            "http.HandleFunc(\"/\", handler); http.ListenAndServe(\":8080\", nil)",
+            "json.Unmarshal(data, &struct)",
+            "var wg sync.WaitGroup; wg.Add(1); wg.Done();",
+            "let mut x = 5; println!(\"The value of x is: {}\", x);",
+            "fn main() { let s = String::from(\"hello\"); }",
+            "match number { 1 => println!(\"One\"), _ => println!(\"Other\"), }",
+            "pub struct Point { x: i32, y: i32 }",
+            "impl Rectangle { fn area(&self) -> u32 { self.width * self.height } }",
+            "let v: Vec<i32> = Vec::new();",
+            "use std::io; io::stdin().read_line(&mut guess).expect(\"Failed to read\");",
+            "#[derive(Debug)]",
+            "for number in (1..4).rev() { println!(\"{}!\", number); }",
+            "let result: Result<i32, &str> = Ok(10);",
+            "#!/bin/bash echo \"Hello World\"",
+            "for file in *.txt; do mv \"$file\" \"${file%.txt}.md\"; done",
+            "if [ -f \"$file\" ]; then echo \"File exists\"; fi",
+            "grep -r \"search_term\" /path/to/directory",
+            "chmod +x script.sh",
+            "git commit -m \"Initial commit\"",
+            "docker build -t my-image .",
+            "npm install --save-dev typescript",
+            "ls -la | grep \"test\"",
+            "export PATH=$PATH:/usr/local/bin/",
+            "<?php echo \"Hello World\"; ?>",
+            "foreach ($array as $key => $value) { echo \"$key: $value\"; }",
+            "public function __construct($name) { $this->name = $name; }",
+            "if (isset($_POST['submit'])) { processForm(); }",
+            "header('Content-Type: application/json');"
+        ];
 
-        const TIME_LIMITS = { easy: 30, medium: 60, hard: 60 };
+        // Extended keywords for DEV Mode (Mix of JS, C#, Python, HTML, Assembly)
+        const DEV_KEYWORDS = [
+            // JS/TS
+            "const", "let", "var", "function", "return", "await", "async", "import", "export", "default",
+            "class", "extends", "super", "this", "constructor", "static", "public", "private", "protected",
+            "interface", "type", "enum", "implements", "package", "void", "null", "undefined", "true", "false",
+            "typeof", "instanceof", "new", "delete", "throw", "try", "catch", "finally", "promise", "resolve",
+            "reject", "map", "filter", "reduce", "foreach", "find", "push", "pop", "shift", "unshift", "splice",
+            "slice", "concat", "join", "split", "replace", "match", "search", "test", "exec", "dom", "window",
+            "document", "console", "log", "warn", "error", "debugger", "arguments", "eval", "prototype",
+            
+            // C#
+            "namespace", "using", "system", "linq", "console", "writeline", "readline", "string", "int", "bool",
+            "double", "float", "decimal", "char", "byte", "long", "short", "object", "dynamic", "var", "list",
+            "dictionary", "array", "enumerable", "queryable", "select", "where", "orderby", "groupby", "join",
+            "equals", "contains", "any", "all", "first", "last", "single", "count", "min", "max", "average",
+            "sum", "aggregate", "distinct", "union", "intersect", "except", "take", "skip", "tolist", "toarray",
+            "get", "set", "value", "delegate", "event", "lambda", "expression", "func", "action", "predicate",
+            "struct", "readonly", "volatile", "unsafe", "fixed", "stackalloc", "sizeof", "override", "virtual",
+            "abstract", "sealed", "extern", "partial", "ref", "out", "in", "params", "checked", "unchecked",
+            
+            // Python
+            "def", "lambda", "global", "nonlocal", "class", "import", "from", "as", "pass", "break", "continue",
+            "return", "yield", "raise", "try", "except", "finally", "assert", "if", "elif", "else", "for",
+            "while", "with", "print", "len", "range", "list", "dict", "set", "tuple", "str", "int", "float",
+            "bool", "none", "true", "false", "and", "or", "not", "is", "in", "open", "read", "write", "close",
+            "append", "extend", "insert", "remove", "pop", "clear", "index", "count", "sort", "reverse", "copy",
+            "self", "init", "super", "args", "kwargs", "decorator", "generator", "iterator", "decorator",
+            
+            // HTML
+            "html", "head", "body", "title", "meta", "link", "script", "style", "div", "span", "p", "h1", "h2",
+            "ul", "ol", "li", "table", "tr", "td", "th", "thead", "tbody", "form", "input", "button", "label",
+            "select", "option", "textarea", "img", "src", "href", "alt", "class", "id", "name", "value",
+            "type", "placeholder", "disabled", "checked", "readonly", "required", "autofocus", "autocomplete",
+            "target", "rel", "width", "height", "style", "canvas", "svg", "path", "circle", "rect", "iframe",
+            
+            // Assembly (x86/General)
+            "mov", "add", "sub", "mul", "div", "inc", "dec", "jmp", "je", "jne", "jg", "jl", "cmp", "call",
+            "ret", "push", "pop", "lea", "nop", "xor", "and", "or", "not", "shl", "shr", "rol", "ror", "eax",
+            "ebx", "ecx", "edx", "esi", "edi", "esp", "ebp", "eip", "rax", "rbx", "rcx", "rdx", "rsi", "rdi",
+            "rsp", "rbp", "rip", "byte", "word", "dword", "qword", "ptr", "offset", "segment", "assume", "proc",
+            "endp", "macro", "endm", "db", "dw", "dd", "dq", "dt", "equ", "org", "start", "int", "loop", "rep"
+        ];
+
+        const TIME_LIMITS = { easy: 30, medium: 60, hard: 60, dev: 180 };
 
         // --- State ---
         let state = {
@@ -254,7 +418,8 @@
             btns: {
                 easy: document.getElementById('btn-easy'),
                 medium: document.getElementById('btn-medium'),
-                hard: document.getElementById('btn-hard')
+                hard: document.getElementById('btn-hard'),
+                dev: document.getElementById('btn-dev')
             }
         };
 
@@ -311,6 +476,34 @@
 
         // --- Core Logic ---
         function generateText(diff) {
+            // DEV Mode Logic
+            if (diff === 'dev') {
+                let combinedText = [];
+                let currentWordCount = 0;
+                const MIN_WORDS = 200;
+
+                // Keep adding content until we hit the word limit
+                while (currentWordCount < MIN_WORDS) {
+                    // Randomly choose between a Snippet (60% chance) or a Keyword Batch (40% chance)
+                    // This creates a nice rhythm of complex syntax followed by rapid-fire keywords
+                    if (Math.random() > 0.4) {
+                        const snippet = DEV_SNIPPETS[Math.floor(Math.random() * DEV_SNIPPETS.length)];
+                        combinedText.push(snippet);
+                        currentWordCount += snippet.split(' ').length;
+                    } else {
+                        // Add a batch of 5-10 keywords
+                        const batchSize = Math.floor(Math.random() * 6) + 5;
+                        for (let i = 0; i < batchSize; i++) {
+                            const kw = DEV_KEYWORDS[Math.floor(Math.random() * DEV_KEYWORDS.length)];
+                            combinedText.push(kw);
+                            currentWordCount++;
+                        }
+                    }
+                }
+                return combinedText.join(' ');
+            }
+
+            // Standard Logic
             const pool = WORD_POOLS[diff];
             const wordCount = diff === 'easy' ? 30 : diff === 'medium' ? 40 : 30;
             let words = [];
@@ -340,7 +533,8 @@
                 const btn = els.btns[key];
                 
                 // Reset basic styles
-                btn.className = `px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200`;
+                // Dev button has slightly different styling intent
+                btn.className = `px-6 py-2 rounded-md text-sm font-medium ${key === 'dev' ? 'uppercase tracking-wider' : 'capitalize'} transition-all duration-200`;
                 
                 if (key === diff) {
                     btn.classList.add('shadow-sm');
@@ -576,7 +770,8 @@
                 let badgeClass = '';
                 if(run.difficulty === 'easy') badgeClass = 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400';
                 else if(run.difficulty === 'medium') badgeClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400';
-                else badgeClass = 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400';
+                else if(run.difficulty === 'hard') badgeClass = 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400';
+                else if(run.difficulty === 'dev') badgeClass = 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400';
 
                 tr.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">${date}</td>
