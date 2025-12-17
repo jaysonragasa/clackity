@@ -468,23 +468,14 @@
                     const delta = now - state.lastKeyTime;
                     const relativeTime = (now - state.startTime) / 1000;
                     
-                    // Filter outlier pauses (e.g. > 2s pause shouldn't skew graph too much, but allow it for reality)
-                    if (delta < 2000) { 
-                        state.rawLatencyData.push({ t: relativeTime, val: delta });
-                    }
+                    // Removed the 2000ms cap. Now recording ALL delays accurately.
+                    state.rawLatencyData.push({ t: relativeTime, val: delta });
                 }
                 // Update timestamp (even for first key)
                 state.lastKeyTime = now;
                 // -------------------------
 
-                // Count Backspace
-                if (e.key === 'Backspace') {
-                    state.totalKeystrokes++;
-                } 
-                // Count any single character key (excluding meta keys)
-                else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    state.totalKeystrokes++;
-                }
+                // Note: Keystroke counting for accuracy moved to handleInput to support mobile/swipe typing
             });
             
             // Focus hack
@@ -669,6 +660,11 @@
 
             const newInput = e.target.value;
             
+            // Track total keystrokes based on input length change (robust for mobile/swipe)
+            const inputDiff = Math.abs(newInput.length - state.userInput.length);
+            // Default to 1 if diff is 0 (unlikely but safe)
+            state.totalKeystrokes += inputDiff === 0 ? 1 : inputDiff;
+
             // Mistake tracking (Cumulative for the counter): If user typed new chars
             if (newInput.length > state.userInput.length) {
                 // Loop from the end of the OLD input to the end of the NEW input
@@ -698,8 +694,8 @@
             }
 
             // Accuracy = (Correct Characters) / (Total Physical Keystrokes)
-            // state.totalKeystrokes is updated via 'keydown' listener to capture Backspaces and all key presses
-            state.accuracy = state.totalKeystrokes > 0 ? Math.round((correct / state.totalKeystrokes) * 100) : 100;
+            // state.totalKeystrokes is updated via handleInput logic now to account for mobile composition
+            state.accuracy = state.totalKeystrokes > 0 ? Math.min(100, Math.round((correct / state.totalKeystrokes) * 100)) : 100;
 
             let timeElapsed = 0;
             if (state.startTime) {
@@ -749,13 +745,12 @@
             // --- Scales ---
             const maxWpm = Math.max(...dataWpm, 60); // min scale 60
             
-            // Find max latency for scaling (cap at reasonable visual limit so one outlier doesn't flatten graph)
-            // But user asked for raw variation, so we show it all, maybe cap at 1s for visual clarity
+            // Find max latency for scaling 
             let maxLat = 0;
             if (rawLat.length > 0) {
                 const vals = rawLat.map(d => d.val);
                 maxLat = Math.max(...vals);
-                // Hard cap max scale visual at 1000ms to keep graph readable, dots go off chart if slower
+                // Ensure a reasonable minimum scale so the graph isn't empty if you type super fast
                 if (maxLat < 300) maxLat = 300; 
             } else {
                 maxLat = 300;
