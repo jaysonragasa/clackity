@@ -148,6 +148,7 @@
             <!-- Results View (Hidden by default) -->
             <div id="results-view" class="hidden rounded-xl p-8 text-center animate-fade-in bg-white shadow-lg border border-slate-100 dark:bg-slate-800 dark:border-none">
                 <h2 class="text-3xl font-bold mb-6 text-slate-800 dark:text-slate-100">Test Complete!</h2>
+                
                 <div class="flex justify-center flex-wrap gap-8 mb-8">
                     <div class="text-center">
                         <div id="result-wpm" class="text-5xl font-bold text-emerald-500 mb-1">0</div>
@@ -162,6 +163,12 @@
                         <div class="text-sm text-slate-500 dark:text-slate-400">Mistakes</div>
                     </div>
                 </div>
+
+                <!-- Speed Graph -->
+                <div class="w-full max-w-3xl mx-auto h-64 mb-8 relative bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+                    <canvas id="wpm-chart" class="w-full h-full"></canvas>
+                </div>
+
                 <button onclick="resetGame()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors shadow-lg shadow-emerald-600/20">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/></svg>
                     Try Again
@@ -389,6 +396,9 @@
             accuracy: 100,
             mistakes: 0,
             totalKeystrokes: 0, // Track every physical key press
+            wpmHistory: [], // Track WPM over time
+            lastKeyTime: null, 
+            rawLatencyData: [], // Stores {t: relativeTime, val: delay} for every keystroke
             history: []
         };
 
@@ -448,15 +458,24 @@
             els.themeToggle.addEventListener('click', toggleTheme);
             els.input.addEventListener('input', handleInput);
             
-            // KEYDOWN Listener for strict keystroke counting
+            // KEYDOWN Listener for strict keystroke counting and latency
             els.input.addEventListener('keydown', (e) => {
                 if (state.gameState === 'finished') return;
                 
-                // If game hasn't started, first keypress starts it
-                if (state.gameState === 'idle') {
-                    // Start game logic is handled in handleInput usually, but we need to count this first key
-                    // We'll let handleInput start the game state, but we count the key here if it's valid
+                // --- Inter-Key Latency ---
+                const now = Date.now();
+                if (state.gameState === 'playing' && state.lastKeyTime) {
+                    const delta = now - state.lastKeyTime;
+                    const relativeTime = (now - state.startTime) / 1000;
+                    
+                    // Filter outlier pauses (e.g. > 2s pause shouldn't skew graph too much, but allow it for reality)
+                    if (delta < 2000) { 
+                        state.rawLatencyData.push({ t: relativeTime, val: delta });
+                    }
                 }
+                // Update timestamp (even for first key)
+                state.lastKeyTime = now;
+                // -------------------------
 
                 // Count Backspace
                 if (e.key === 'Backspace') {
@@ -565,6 +584,10 @@
             state.accuracy = 100;
             state.mistakes = 0;
             state.totalKeystrokes = 0; // Reset total keystrokes
+            state.wpmHistory = [];
+            
+            state.lastKeyTime = null;
+            state.rawLatencyData = [];
 
             if (state.timerId) clearInterval(state.timerId);
             
@@ -582,9 +605,15 @@
             state.gameState = 'playing';
             state.startTime = Date.now();
             els.startOverlay.classList.add('opacity-0');
+            state.wpmHistory.push(0);
             
             state.timerId = setInterval(() => {
                 state.timeLeft--;
+                
+                // 1. Calculate WPM
+                calculateStats();
+                state.wpmHistory.push(state.wpm);
+                
                 updateStatsUI();
                 if (state.timeLeft <= 0) {
                     finishGame();
@@ -600,6 +629,9 @@
             // Final calc
             calculateStats();
             updateStatsUI();
+            
+            // Push final data points
+            state.wpmHistory.push(state.wpm);
 
             // Save History
             const record = {
@@ -626,6 +658,9 @@
             els.resultMistakes.textContent = state.mistakes;
 
             renderHistory();
+            
+            // Render Chart
+            setTimeout(drawChart, 100);
         }
 
         function handleInput(e) {
@@ -682,6 +717,139 @@
             } else {
                 state.wpm = 0;
             }
+        }
+        
+        function drawChart() {
+            const canvas = document.getElementById('wpm-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Handle High DPI
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width;
+            const height = rect.height;
+            const padding = 40; // Increased padding for dual axis labels
+
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+
+            const dataWpm = state.wpmHistory;
+            const rawLat = state.rawLatencyData;
+            
+            if (dataWpm.length < 2) return;
+
+            // X-Axis Scale: Based on total seconds elapsed (approx wpmHistory.length)
+            const totalDuration = dataWpm.length;
+
+            // --- Scales ---
+            const maxWpm = Math.max(...dataWpm, 60); // min scale 60
+            
+            // Find max latency for scaling (cap at reasonable visual limit so one outlier doesn't flatten graph)
+            // But user asked for raw variation, so we show it all, maybe cap at 1s for visual clarity
+            let maxLat = 0;
+            if (rawLat.length > 0) {
+                const vals = rawLat.map(d => d.val);
+                maxLat = Math.max(...vals);
+                // Hard cap max scale visual at 1000ms to keep graph readable, dots go off chart if slower
+                if (maxLat < 300) maxLat = 300; 
+            } else {
+                maxLat = 300;
+            }
+
+            // Helper to get X position for a specific second (WPM)
+            const getX_Wpm = (i) => padding + (i / (totalDuration - 1)) * (width - 2 * padding);
+            
+            // Helper to get X position for raw time (Latency)
+            const getX_Time = (t) => padding + (t / (totalDuration - 1)) * (width - 2 * padding);
+            
+            // Y-axis 1: WPM (Left)
+            const getY_Wpm = (val) => height - padding - (val / maxWpm) * (height - 2 * padding);
+            
+            // Y-axis 2: Latency (Right)
+            const getY_Lat = (val) => height - padding - (val / maxLat) * (height - 2 * padding);
+
+
+            // --- Draw WPM Line (Emerald) ---
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.beginPath();
+            ctx.moveTo(getX_Wpm(0), getY_Wpm(dataWpm[0]));
+            
+            for (let i = 1; i < dataWpm.length; i++) {
+                ctx.lineTo(getX_Wpm(i), getY_Wpm(dataWpm[i]));
+            }
+
+            ctx.strokeStyle = isDark ? '#34d399' : '#059669'; // Emerald
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Fill Area WPM
+            ctx.lineTo(getX_Wpm(dataWpm.length - 1), height - padding);
+            ctx.lineTo(getX_Wpm(0), height - padding);
+            ctx.closePath();
+            const gradientWpm = ctx.createLinearGradient(0, 0, 0, height);
+            gradientWpm.addColorStop(0, isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(5, 150, 105, 0.2)');
+            gradientWpm.addColorStop(1, 'rgba(52, 211, 153, 0)');
+            ctx.fillStyle = gradientWpm;
+            ctx.fill();
+
+
+            // --- Draw Raw Latency Line (Amber/Pink) ---
+            if (rawLat.length > 0) {
+                ctx.beginPath();
+                // Move to first point
+                ctx.moveTo(getX_Time(rawLat[0].t), getY_Lat(rawLat[0].val));
+                
+                for (let i = 1; i < rawLat.length; i++) {
+                    const pt = rawLat[i];
+                    // Clamp Y to prevent drawing way out of bounds
+                    let y = getY_Lat(pt.val);
+                    if (y < padding) y = padding; 
+                    
+                    ctx.lineTo(getX_Time(pt.t), y);
+                }
+                
+                ctx.strokeStyle = isDark ? 'rgba(251, 113, 133, 0.8)' : 'rgba(225, 29, 72, 0.6)'; // Rose transparent
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // --- Grid & Labels ---
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'right';
+            
+            // Left Axis (WPM)
+            ctx.fillStyle = isDark ? '#34d399' : '#059669';
+            ctx.fillText(maxWpm + ' WPM', padding - 5, padding); 
+            ctx.fillText('0', padding - 5, height - padding);
+
+            // Right Axis (Latency)
+            ctx.textAlign = 'left';
+            ctx.fillStyle = isDark ? '#fb7185' : '#e11d48';
+            ctx.fillText(Math.round(maxLat) + 'ms', width - padding + 5, padding);
+            ctx.fillText('0ms', width - padding + 5, height - padding);
+
+            // Legend
+            ctx.textAlign = 'center';
+            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b'; // Slate
+            ctx.fillText('Time (seconds)', width / 2, height - 10);
+            
+            // Legend Markers (Top Center)
+            const mid = width / 2;
+            
+            // Green Dot
+            ctx.beginPath(); ctx.arc(mid - 60, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#34d399' : '#059669'; ctx.fill();
+            ctx.fillStyle = isDark ? '#e2e8f0' : '#334155'; ctx.textAlign = 'left'; ctx.fillText("Speed", mid - 50, 13);
+            
+            // Red Dot
+            ctx.beginPath(); ctx.arc(mid + 10, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#fb7185' : '#e11d48'; ctx.fill();
+            ctx.fillText("Delay between key strokes", mid + 20, 13);
         }
 
         // --- Renderers ---
@@ -797,6 +965,11 @@
             }
             // Re-render to fix difficulty button colors
             setDifficulty(state.difficulty);
+            
+            // Re-render chart if visible (results view active)
+            if (!els.resultsView.classList.contains('hidden')) {
+                drawChart();
+            }
         }
 
         function updateThemeIcons(isDark) {
