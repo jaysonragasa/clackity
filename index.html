@@ -44,12 +44,22 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Focus Mode Styles */
+        body.is-focused header,
+        body.is-focused #difficulty-row,
+        body.is-focused #stats-bar,
+        body.is-focused #history-section {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 <body class="transition-colors duration-300 bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen font-sans">
 
     <!-- Header -->
-    <header class="px-6 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+    <header id="header" class="px-6 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
         <div class="flex items-center gap-2">
             <!-- Keyboard Icon -->
             <svg class="w-8 h-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M6 12h.001"/><path d="M10 12h.001"/><path d="M14 12h.001"/><path d="M18 12h.001"/><path d="M7 16h10"/></svg>
@@ -65,18 +75,26 @@
 
     <main class="max-w-5xl mx-auto px-4 py-8 md:py-12">
         
-        <!-- Difficulty Select -->
-        <div class="flex justify-center mb-10">
+        <!-- Difficulty Select & Focus Toggle -->
+        <div id="difficulty-row" class="flex flex-col md:flex-row justify-center items-center gap-4 mb-10">
             <div class="inline-flex rounded-lg p-1 bg-slate-200 dark:bg-slate-800">
                 <button onclick="setDifficulty('easy')" id="btn-easy" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">easy</button>
                 <button onclick="setDifficulty('medium')" id="btn-medium" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white">medium</button>
                 <button onclick="setDifficulty('hard')" id="btn-hard" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">hard</button>
                 <button onclick="setDifficulty('dev')" id="btn-dev" class="px-6 py-2 rounded-md text-sm font-medium uppercase tracking-wider transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">DEV</button>
             </div>
+            
+            <div class="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
+
+            <button id="btn-focus-mode" onclick="toggleFocusMode()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-transparent hover:bg-slate-200 dark:hover:bg-slate-800" title="Toggle Focus Mode">
+                <svg id="icon-focus-off" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="icon-focus-on" class="w-4 h-4 hidden text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span>Focus Mode</span>
+            </button>
         </div>
 
         <!-- Stats Bar -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div id="stats-bar" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 transition-opacity duration-300">
             <!-- Time -->
             <div id="card-time" class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400">
@@ -386,6 +404,7 @@
         // --- State ---
         let state = {
             difficulty: 'medium',
+            focusMode: false, // New focus mode state
             gameState: 'idle', // idle, playing, finished
             targetText: '',
             userInput: '',
@@ -425,6 +444,9 @@
             themeToggle: document.getElementById('theme-toggle'),
             iconSun: document.getElementById('icon-sun'),
             iconMoon: document.getElementById('icon-moon'),
+            btnFocus: document.getElementById('btn-focus-mode'),
+            iconFocusOn: document.getElementById('icon-focus-on'),
+            iconFocusOff: document.getElementById('icon-focus-off'),
             btns: {
                 easy: document.getElementById('btn-easy'),
                 medium: document.getElementById('btn-medium'),
@@ -534,6 +556,19 @@
             return text;
         }
 
+        function toggleFocusMode() {
+            state.focusMode = !state.focusMode;
+            if (state.focusMode) {
+                els.iconFocusOn.classList.remove('hidden');
+                els.iconFocusOff.classList.add('hidden');
+                els.btnFocus.classList.add('bg-slate-200', 'dark:bg-slate-800');
+            } else {
+                els.iconFocusOn.classList.add('hidden');
+                els.iconFocusOff.classList.remove('hidden');
+                els.btnFocus.classList.remove('bg-slate-200', 'dark:bg-slate-800');
+            }
+        }
+
         function setDifficulty(diff) {
             if (state.gameState === 'playing') return;
             state.difficulty = diff;
@@ -580,6 +615,9 @@
             state.lastKeyTime = null;
             state.rawLatencyData = [];
 
+            // Remove Focus Mode visual state if active
+            document.body.classList.remove('is-focused');
+
             if (state.timerId) clearInterval(state.timerId);
             
             els.input.value = '';
@@ -597,6 +635,11 @@
             state.startTime = Date.now();
             els.startOverlay.classList.add('opacity-0');
             state.wpmHistory.push(0);
+            
+            // Activate Focus Mode if enabled
+            if (state.focusMode) {
+                document.body.classList.add('is-focused');
+            }
             
             state.timerId = setInterval(() => {
                 state.timeLeft--;
@@ -616,6 +659,9 @@
         function finishGame() {
             state.gameState = 'finished';
             clearInterval(state.timerId);
+
+            // Remove Focus Mode to show results
+            document.body.classList.remove('is-focused');
 
             // Final calc
             calculateStats();
