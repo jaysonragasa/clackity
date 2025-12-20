@@ -54,39 +54,86 @@
             pointer-events: none;
             transition: opacity 0.5s ease;
         }
+
+        /* Freeplay Mode Styles */
+        /* Apply mask to container so it stays fixed while text moves */
+        /* Updated mask: Left side is fully visible (black 0%), right side fades out */
+        #game-view.mode-freeplay #text-container {
+            mask-image: linear-gradient(to right, black 0%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 0%, black 85%, transparent 100%);
+        }
+        
+        #game-view.mode-freeplay #text-display {
+            white-space: pre; /* No wrapping for scrolling mode */
+            display: inline-block;
+            transition: transform 0.1s ease-out; /* Smooth scrolling */
+            will-change: transform;
+        }
+
+        /* Background Image Handling */
+        body.has-custom-bg {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        /* Add a subtle overlay so text remains readable on busy images */
+        body.has-custom-bg::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3); /* Default dark overlay for dark mode preference */
+            z-index: -1;
+            pointer-events: none;
+        }
+        /* Adjust overlay based on light mode if needed, though usually dark overlay helps readability everywhere */
+        html:not(.dark) body.has-custom-bg::before {
+            background: rgba(255, 255, 255, 0.4);
+        }
     </style>
 </head>
 <body class="transition-colors duration-300 bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen font-sans">
 
     <!-- Header -->
-    <header id="header" class="px-6 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+    <header id="header" class="px-6 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-white/50 dark:bg-slate-900/50 relative z-20">
         <div class="flex items-center gap-2">
             <!-- Keyboard Icon -->
             <svg class="w-8 h-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M6 12h.001"/><path d="M10 12h.001"/><path d="M14 12h.001"/><path d="M18 12h.001"/><path d="M7 16h10"/></svg>
             <h1 class="text-xl font-bold tracking-tight">Clackity</h1>
         </div>
-        <button id="theme-toggle" class="p-2 rounded-full transition-colors hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-            <!-- Sun Icon (Light Mode) -->
-            <svg id="icon-sun" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-            <!-- Moon Icon (Dark Mode) -->
-            <svg id="icon-moon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </button>
+        <div class="flex items-center gap-2">
+            <!-- Settings Button -->
+            <button id="btn-settings" class="p-2 rounded-full transition-colors hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400" title="Settings">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="p-2 rounded-full transition-colors hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                <!-- Sun Icon (Light Mode) -->
+                <svg id="icon-sun" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                <!-- Moon Icon (Dark Mode) -->
+                <svg id="icon-moon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+        </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+    <main class="max-w-5xl mx-auto px-4 py-8 md:py-12 relative z-10">
         
         <!-- Difficulty Select & Focus Toggle -->
         <div id="difficulty-row" class="flex flex-col md:flex-row justify-center items-center gap-4 mb-10">
-            <div class="inline-flex rounded-lg p-1 bg-slate-200 dark:bg-slate-800">
+            <div class="inline-flex rounded-lg p-1 bg-slate-200 dark:bg-slate-800 backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80">
                 <button onclick="setDifficulty('easy')" id="btn-easy" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">easy</button>
                 <button onclick="setDifficulty('medium')" id="btn-medium" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white">medium</button>
                 <button onclick="setDifficulty('hard')" id="btn-hard" class="px-6 py-2 rounded-md text-sm font-medium capitalize transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">hard</button>
                 <button onclick="setDifficulty('dev')" id="btn-dev" class="px-6 py-2 rounded-md text-sm font-medium uppercase tracking-wider transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">DEV</button>
+                <button onclick="setDifficulty('freeplay')" id="btn-freeplay" class="px-6 py-2 rounded-md text-sm font-medium uppercase tracking-wider transition-all duration-200 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">FREEPLAY</button>
             </div>
             
-            <div class="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
+            <div class="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden"></div>
 
-            <button id="btn-focus-mode" onclick="toggleFocusMode()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-transparent hover:bg-slate-200 dark:hover:bg-slate-800" title="Toggle Focus Mode">
+            <button id="btn-focus-mode" onclick="toggleFocusMode()" class="hidden flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-transparent hover:bg-slate-200 dark:hover:bg-slate-800" title="Toggle Focus Mode">
                 <svg id="icon-focus-off" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 <svg id="icon-focus-on" class="w-4 h-4 hidden text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 <span>Focus Mode</span>
@@ -96,7 +143,7 @@
         <!-- Stats Bar -->
         <div id="stats-bar" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 transition-opacity duration-300">
             <!-- Time -->
-            <div id="card-time" class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+            <div id="card-time" class="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     <span class="text-xs uppercase tracking-wider font-semibold">Time</span>
@@ -105,7 +152,7 @@
             </div>
 
             <!-- WPM -->
-            <div class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+            <div class="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                     <span class="text-xs uppercase tracking-wider font-semibold">WPM</span>
@@ -114,7 +161,7 @@
             </div>
 
             <!-- Accuracy -->
-            <div class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+            <div class="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                     <span class="text-xs uppercase tracking-wider font-semibold">Accuracy</span>
@@ -123,7 +170,7 @@
             </div>
 
             <!-- Mistakes -->
-            <div id="card-mistakes" class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+            <div id="card-mistakes" class="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400" id="label-mistakes">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
                     <span class="text-xs uppercase tracking-wider font-semibold">Mistakes</span>
@@ -132,7 +179,7 @@
             </div>
 
             <!-- Status -->
-            <div class="p-4 rounded-xl border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+            <div class="p-4 rounded-xl border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700 transition-colors">
                 <div class="flex items-center gap-2 mb-2 text-slate-400 dark:text-slate-400">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     <span class="text-xs uppercase tracking-wider font-semibold">Status</span>
@@ -145,7 +192,7 @@
         <div class="relative mb-12">
             
             <!-- Game Active View -->
-            <div id="game-view" class="relative rounded-xl p-8 min-h-[200px] cursor-text transition-colors bg-white shadow-sm border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
+            <div id="game-view" class="relative rounded-xl p-8 min-h-[200px] cursor-text transition-colors bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm shadow-sm border border-slate-200 dark:border-slate-700">
                 
                 <!-- Start Overlay -->
                 <div id="start-overlay" class="absolute inset-0 rounded-xl flex items-center justify-center bg-black/5 dark:bg-black/20 z-10 backdrop-blur-[1px] pointer-events-none transition-opacity duration-300">
@@ -153,8 +200,8 @@
                 </div>
 
                 <!-- Text Display -->
-                <div class="relative">
-                    <div id="text-display" class="leading-relaxed break-words select-none min-h-[100px] font-mono text-xl md:text-2xl">
+                <div class="relative overflow-hidden" id="text-container">
+                    <div id="text-display" class="leading-relaxed break-words select-none min-h-[100px] font-mono text-xl md:text-2xl whitespace-pre-wrap">
                         <!-- Spans injected here via JS -->
                     </div>
                 </div>
@@ -164,7 +211,7 @@
             </div>
 
             <!-- Results View (Hidden by default) -->
-            <div id="results-view" class="hidden rounded-xl p-8 text-center animate-fade-in bg-white shadow-lg border border-slate-100 dark:bg-slate-800 dark:border-none">
+            <div id="results-view" class="hidden rounded-xl p-8 text-center animate-fade-in bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border border-slate-100 dark:border-none">
                 <h2 class="text-3xl font-bold mb-6 text-slate-800 dark:text-slate-100">Test Complete!</h2>
                 
                 <div class="flex justify-center flex-wrap gap-8 mb-8">
@@ -200,7 +247,7 @@
                 <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
                 <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300">Recent History</h3>
             </div>
-            <div class="rounded-xl overflow-hidden border bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div class="rounded-xl overflow-hidden border bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 shadow-sm dark:border-slate-700">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
@@ -216,6 +263,32 @@
                             <!-- History rows -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSettings()"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all border border-slate-200 dark:border-slate-700">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-white">Settings</h2>
+                    <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="bg-url-input" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Background Image URL</label>
+                        <input type="text" id="bg-url-input" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" placeholder="https://example.com/image.jpg">
+                        <p class="mt-1 text-xs text-slate-500">Leave empty to use default theme colors.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3">
+                    <button onclick="closeSettings()" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium transition-colors">Cancel</button>
+                    <button onclick="saveSettings()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-md shadow-emerald-500/20 transition-colors">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -399,7 +472,7 @@
             "endp", "macro", "endm", "db", "dw", "dd", "dq", "dt", "equ", "org", "start", "int", "loop", "rep"
         ];
 
-        const TIME_LIMITS = { easy: 30, medium: 60, hard: 60, dev: 180 };
+        const TIME_LIMITS = { easy: 30, medium: 60, hard: 60, dev: 180, freeplay: Infinity };
 
         // --- State ---
         let state = {
@@ -418,12 +491,14 @@
             wpmHistory: [], // Track WPM over time
             lastKeyTime: null, 
             rawLatencyData: [], // Stores {t: relativeTime, val: delay} for every keystroke
-            history: []
+            history: [],
+            bgImage: ''
         };
 
         // --- Elements ---
         const els = {
             input: document.getElementById('hidden-input'),
+            textContainer: document.getElementById('text-container'), // New container
             display: document.getElementById('text-display'),
             startOverlay: document.getElementById('start-overlay'),
             time: document.getElementById('stat-time'),
@@ -447,11 +522,15 @@
             btnFocus: document.getElementById('btn-focus-mode'),
             iconFocusOn: document.getElementById('icon-focus-on'),
             iconFocusOff: document.getElementById('icon-focus-off'),
+            btnSettings: document.getElementById('btn-settings'),
+            settingsModal: document.getElementById('settings-modal'),
+            bgUrlInput: document.getElementById('bg-url-input'),
             btns: {
                 easy: document.getElementById('btn-easy'),
                 medium: document.getElementById('btn-medium'),
                 hard: document.getElementById('btn-hard'),
-                dev: document.getElementById('btn-dev')
+                dev: document.getElementById('btn-dev'),
+                freeplay: document.getElementById('btn-freeplay')
             }
         };
 
@@ -473,6 +552,13 @@
                 renderHistory();
             }
 
+            // Background
+            const savedBg = localStorage.getItem('customBg');
+            if (savedBg) {
+                state.bgImage = savedBg;
+                applyBackground(savedBg);
+            }
+
             // Game
             setDifficulty('medium');
 
@@ -480,10 +566,13 @@
             els.themeToggle.addEventListener('click', toggleTheme);
             els.input.addEventListener('input', handleInput);
             
+            // Settings Listeners
+            els.btnSettings.addEventListener('click', openSettings);
+            
             // KEYDOWN Listener for strict keystroke counting and latency
             els.input.addEventListener('keydown', (e) => {
                 // Focus hack: If game is idle and user starts typing anywhere, focus input
-                if (state.gameState === 'idle' && document.activeElement !== els.input) {
+                if (state.gameState === 'idle' && document.activeElement !== els.input && document.activeElement !== els.bgUrlInput) {
                     els.input.focus();
                 }
 
@@ -505,6 +594,9 @@
             
             // Global focus handler for instant start
             document.addEventListener('keydown', (e) => {
+                // Don't steal focus if typing in settings input
+                if (document.activeElement === els.bgUrlInput) return;
+
                 if (state.gameState === 'idle' && !e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1) {
                     if (document.activeElement !== els.input) {
                         els.input.focus();
@@ -518,8 +610,41 @@
             });
         }
 
+        // --- Settings Logic ---
+        function openSettings() {
+            els.bgUrlInput.value = state.bgImage;
+            els.settingsModal.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            els.settingsModal.classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const url = els.bgUrlInput.value.trim();
+            state.bgImage = url;
+            localStorage.setItem('customBg', url);
+            applyBackground(url);
+            closeSettings();
+        }
+
+        function applyBackground(url) {
+            if (url) {
+                document.body.classList.add('has-custom-bg');
+                document.body.style.backgroundImage = `url('${url}')`;
+            } else {
+                document.body.classList.remove('has-custom-bg');
+                document.body.style.backgroundImage = '';
+            }
+        }
+
         // --- Core Logic ---
         function generateText(diff) {
+            // FREEPLAY Mode Logic - Infinite mix
+            if (diff === 'freeplay') {
+                return generateFreeplayChunk();
+            }
+
             // DEV Mode Logic
             if (diff === 'dev') {
                 let combinedText = [];
@@ -553,14 +678,61 @@
 
             if (diff === 'easy') return words.join(' ');
 
-            let text = words.map((word, index) => {
-                if (index === 0 || index % 8 === 0) return word.charAt(0).toUpperCase() + word.slice(1);
-                if ((index + 1) % 8 === 0 && index !== words.length - 1) return word + ".";
-                if (Math.random() > 0.85 && index !== words.length - 1 && (index + 1) % 8 !== 0) return word + ",";
-                return word;
-            }).join(' ');
+            // Apply sentence structure for Medium/Hard
+            return applySentenceStructure(words);
+        }
 
-            if (!text.endsWith('.')) text += '.';
+        function generateFreeplayChunk() {
+            // Mix Easy, Medium, Hard words uniformly
+            const categories = ['easy', 'medium', 'hard'];
+            const wordCount = 50; // Generate chunks of 50 words
+            let words = [];
+            
+            for (let i = 0; i < wordCount; i++) {
+                const cat = categories[Math.floor(Math.random() * categories.length)];
+                const pool = WORD_POOLS[cat];
+                words.push(pool[Math.floor(Math.random() * pool.length)]);
+            }
+            
+            // Apply sentence structure to chunk and add a trailing space
+            return applySentenceStructure(words) + ' ';
+        }
+
+        // Helper to add periods, commas, and caps
+        function applySentenceStructure(words) {
+            let text = "";
+            let sentenceLength = Math.floor(Math.random() * 5) + 5; // 5-9 words per sentence
+            let currentCount = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                let word = words[i];
+                
+                // Capitalize first word of sentence
+                if (currentCount === 0) {
+                    word = word.charAt(0).toUpperCase() + word.slice(1);
+                }
+
+                // Add to text
+                text += word;
+                currentCount++;
+
+                // End sentence?
+                if (currentCount >= sentenceLength) {
+                    text += ".";
+                    currentCount = 0;
+                    sentenceLength = Math.floor(Math.random() * 5) + 5; // Reset length
+                } else {
+                    // Random comma (15% chance if not start/end of sentence)
+                    if (Math.random() < 0.15 && currentCount > 2) {
+                        text += ",";
+                    }
+                }
+
+                // Add space if not last word
+                if (i < words.length - 1) {
+                    text += " ";
+                }
+            }
             return text;
         }
 
@@ -578,14 +750,17 @@
         }
 
         function setDifficulty(diff) {
-            if (state.gameState === 'playing') return;
+            // REMOVED THE GUARD CLAUSE HERE to allow mode switching during play
+            // if (state.gameState === 'playing') return;
+            
             state.difficulty = diff;
             
             // UI
             Object.keys(els.btns).forEach(key => {
                 const btn = els.btns[key];
                 
-                btn.className = `px-6 py-2 rounded-md text-sm font-medium ${key === 'dev' ? 'uppercase tracking-wider' : 'capitalize'} transition-all duration-200`;
+                const isSpecial = key === 'dev' || key === 'freeplay';
+                btn.className = `px-6 py-2 rounded-md text-sm font-medium ${isSpecial ? 'uppercase tracking-wider' : 'capitalize'} transition-all duration-200`;
                 
                 if (key === diff) {
                     btn.classList.add('shadow-sm');
@@ -602,6 +777,13 @@
                     }
                 }
             });
+
+            // Set UI Mode Class for CSS
+            if (diff === 'freeplay') {
+                els.gameView.classList.add('mode-freeplay');
+            } else {
+                els.gameView.classList.remove('mode-freeplay');
+            }
 
             resetGame();
         }
@@ -635,6 +817,9 @@
             els.resultsView.classList.add('hidden');
             els.startOverlay.classList.remove('opacity-0');
             
+            // Reset scrolling
+            els.display.style.transform = 'translateX(0)';
+            
             updateStatsUI();
             renderText();
         }
@@ -650,11 +835,16 @@
             }
             
             state.timerId = setInterval(() => {
-                state.timeLeft--;
+                // If not infinite freeplay, count down
+                if (state.timeLeft !== Infinity) {
+                    state.timeLeft--;
+                }
+                
                 calculateStats();
                 state.wpmHistory.push(state.wpm);
                 updateStatsUI();
-                if (state.timeLeft <= 0) {
+                
+                if (state.timeLeft <= 0 && state.timeLeft !== Infinity) {
                     finishGame();
                 }
             }, 1000);
@@ -707,6 +897,14 @@
             const inputDiff = Math.abs(newInput.length - state.userInput.length);
             state.totalKeystrokes += inputDiff === 0 ? 1 : inputDiff;
 
+            // Freeplay Infinite Logic
+            if (state.difficulty === 'freeplay') {
+                // If user is approaching end of buffer (within 20 chars), add more
+                if (state.targetText.length - newInput.length < 20) {
+                    state.targetText += generateFreeplayChunk();
+                }
+            }
+
             // Mistake tracking
             if (newInput.length > state.userInput.length) {
                 for (let i = state.userInput.length; i < newInput.length; i++) {
@@ -721,7 +919,8 @@
             updateStatsUI();
             renderText();
 
-            if (state.userInput.length >= state.targetText.length) {
+            // End game check (only for non-freeplay)
+            if (state.difficulty !== 'freeplay' && state.userInput.length >= state.targetText.length) {
                 finishGame();
             }
         }
@@ -740,7 +939,7 @@
             if (state.startTime) {
                 timeElapsed = (Date.now() - state.startTime) / 1000;
             }
-            if (state.gameState === 'finished') {
+            if (state.gameState === 'finished' && state.difficulty !== 'freeplay') {
                 timeElapsed = TIME_LIMITS[state.difficulty] - state.timeLeft;
                 if(timeElapsed <= 0) timeElapsed = TIME_LIMITS[state.difficulty];
             }
@@ -861,16 +1060,23 @@
         }
 
         function updateStatsUI() {
-            const mins = Math.floor(state.timeLeft / 60);
-            const secs = state.timeLeft % 60;
-            els.time.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            
-            if (state.timeLeft < 10 && state.gameState === 'playing') {
-                els.cardTime.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
-                els.time.classList.add('text-red-600');
-            } else {
+            // Freeplay Timer Display
+            if (state.difficulty === 'freeplay') {
+                els.time.textContent = "∞";
                 els.cardTime.classList.remove('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
                 els.time.classList.remove('text-red-600');
+            } else {
+                const mins = Math.floor(state.timeLeft / 60);
+                const secs = state.timeLeft % 60;
+                els.time.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                if (state.timeLeft < 10 && state.gameState === 'playing') {
+                    els.cardTime.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                    els.time.classList.add('text-red-600');
+                } else {
+                    els.cardTime.classList.remove('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                    els.time.classList.remove('text-red-600');
+                }
             }
 
             els.wpm.textContent = state.wpm;
@@ -892,34 +1098,64 @@
 
         function renderText() {
             const display = els.display;
+            
+            // Only rebuild DOM if necessary to prevent flickering (crucial for smooth scrolling)
+            // But strict state management is easier to maintain for now. 
+            // We optimize by just checking if we need to render.
+            // Actually, for the scrolling effect, we manipulate the CONTAINER's transform, so we can keep rebuilding the inner content.
+            
             display.innerHTML = '';
             
             const chars = state.targetText.split('');
             const inputLen = state.userInput.length;
+            
+            // In Freeplay, we scroll. To do this, we need the active character reference.
+            let activeCharSpan = null;
 
             chars.forEach((char, index) => {
                 const span = document.createElement('span');
                 span.textContent = char;
-                span.className = 'relative font-mono text-xl md:text-2xl transition-colors duration-75 ';
+                span.className = 'relative font-mono text-xl md:text-2xl transition-colors duration-75 inline-block'; // inline-block for transform if needed
 
                 if (index < inputLen) {
                     if (state.userInput[index] === char) {
-                        span.className += 'text-emerald-600 dark:text-emerald-400';
+                        span.className += ' text-emerald-600 dark:text-emerald-400';
                     } else {
-                        span.className += 'text-red-500 bg-red-100 dark:bg-red-500/10';
+                        span.className += ' text-red-500 bg-red-100 dark:bg-red-500/10';
                     }
                 } else {
-                    span.className += 'text-slate-300 dark:text-slate-600';
+                    span.className += ' text-slate-300 dark:text-slate-600';
                 }
 
                 if (index === inputLen) {
                     const cursor = document.createElement('span');
                     cursor.className = 'absolute -left-[1px] top-0 bottom-0 w-[2px] animate-pulse-fast bg-emerald-600 dark:bg-emerald-400';
                     span.appendChild(cursor);
+                    activeCharSpan = span;
                 }
 
                 display.appendChild(span);
             });
+
+            // Handle Freeplay Scrolling
+            if (state.difficulty === 'freeplay' && activeCharSpan) {
+                const containerWidth = els.textContainer.offsetWidth;
+                const charOffset = activeCharSpan.offsetLeft;
+                const charWidth = activeCharSpan.offsetWidth;
+                
+                // Calculate scroll position to keep active char in middle (approx 1/2 container width)
+                // We use negative translateX on the display element
+                const targetX = -(charOffset - (containerWidth / 2) + (charWidth / 2));
+                
+                // Only scroll if we have moved past the center start point
+                if (charOffset > containerWidth / 2) {
+                    display.style.transform = `translateX(${targetX}px)`;
+                } else {
+                    display.style.transform = `translateX(0px)`;
+                }
+            } else {
+                display.style.transform = 'none';
+            }
         }
 
         function renderHistory() {
@@ -941,6 +1177,7 @@
                 else if(run.difficulty === 'medium') badgeClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400';
                 else if(run.difficulty === 'hard') badgeClass = 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400';
                 else if(run.difficulty === 'dev') badgeClass = 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400';
+                else if(run.difficulty === 'freeplay') badgeClass = 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400';
 
                 tr.innerHTML = `
                     <td class="px-6 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">${date}</td>
