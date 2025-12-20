@@ -404,7 +404,7 @@
         // --- State ---
         let state = {
             difficulty: 'medium',
-            focusMode: false, // New focus mode state
+            focusMode: false,
             gameState: 'idle', // idle, playing, finished
             targetText: '',
             userInput: '',
@@ -482,6 +482,11 @@
             
             // KEYDOWN Listener for strict keystroke counting and latency
             els.input.addEventListener('keydown', (e) => {
+                // Focus hack: If game is idle and user starts typing anywhere, focus input
+                if (state.gameState === 'idle' && document.activeElement !== els.input) {
+                    els.input.focus();
+                }
+
                 if (state.gameState === 'finished') return;
                 
                 // --- Inter-Key Latency ---
@@ -490,17 +495,24 @@
                     const delta = now - state.lastKeyTime;
                     const relativeTime = (now - state.startTime) / 1000;
                     
-                    // Removed the 2000ms cap. Now recording ALL delays accurately.
+                    // No cap on latency to show full jaggedness
                     state.rawLatencyData.push({ t: relativeTime, val: delta });
                 }
                 // Update timestamp (even for first key)
                 state.lastKeyTime = now;
                 // -------------------------
-
-                // Note: Keystroke counting for accuracy moved to handleInput to support mobile/swipe typing
             });
             
-            // Focus hack
+            // Global focus handler for instant start
+            document.addEventListener('keydown', (e) => {
+                if (state.gameState === 'idle' && !e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1) {
+                    if (document.activeElement !== els.input) {
+                        els.input.focus();
+                    }
+                }
+            });
+            
+            // Focus hack on click
             els.gameView.addEventListener('click', () => {
                 if (state.gameState !== 'finished') els.input.focus();
             });
@@ -514,16 +526,12 @@
                 let currentWordCount = 0;
                 const MIN_WORDS = 200;
 
-                // Keep adding content until we hit the word limit
                 while (currentWordCount < MIN_WORDS) {
-                    // Randomly choose between a Snippet (60% chance) or a Keyword Batch (40% chance)
-                    // This creates a nice rhythm of complex syntax followed by rapid-fire keywords
                     if (Math.random() > 0.4) {
                         const snippet = DEV_SNIPPETS[Math.floor(Math.random() * DEV_SNIPPETS.length)];
                         combinedText.push(snippet);
                         currentWordCount += snippet.split(' ').length;
                     } else {
-                        // Add a batch of 5-10 keywords
                         const batchSize = Math.floor(Math.random() * 6) + 5;
                         for (let i = 0; i < batchSize; i++) {
                             const kw = DEV_KEYWORDS[Math.floor(Math.random() * DEV_KEYWORDS.length)];
@@ -577,8 +585,6 @@
             Object.keys(els.btns).forEach(key => {
                 const btn = els.btns[key];
                 
-                // Reset basic styles
-                // Dev button has slightly different styling intent
                 btn.className = `px-6 py-2 rounded-md text-sm font-medium ${key === 'dev' ? 'uppercase tracking-wider' : 'capitalize'} transition-all duration-200`;
                 
                 if (key === diff) {
@@ -609,19 +615,22 @@
             state.wpm = 0;
             state.accuracy = 100;
             state.mistakes = 0;
-            state.totalKeystrokes = 0; // Reset total keystrokes
+            state.totalKeystrokes = 0;
             state.wpmHistory = [];
             
             state.lastKeyTime = null;
             state.rawLatencyData = [];
 
-            // Remove Focus Mode visual state if active
             document.body.classList.remove('is-focused');
 
             if (state.timerId) clearInterval(state.timerId);
             
             els.input.value = '';
+            
+            // Robust focus
             els.input.focus();
+            setTimeout(() => els.input.focus(), 0);
+
             els.gameView.classList.remove('hidden');
             els.resultsView.classList.add('hidden');
             els.startOverlay.classList.remove('opacity-0');
@@ -636,18 +645,14 @@
             els.startOverlay.classList.add('opacity-0');
             state.wpmHistory.push(0);
             
-            // Activate Focus Mode if enabled
             if (state.focusMode) {
                 document.body.classList.add('is-focused');
             }
             
             state.timerId = setInterval(() => {
                 state.timeLeft--;
-                
-                // 1. Calculate WPM
                 calculateStats();
                 state.wpmHistory.push(state.wpm);
-                
                 updateStatsUI();
                 if (state.timeLeft <= 0) {
                     finishGame();
@@ -660,17 +665,13 @@
             state.gameState = 'finished';
             clearInterval(state.timerId);
 
-            // Remove Focus Mode to show results
             document.body.classList.remove('is-focused');
 
-            // Final calc
             calculateStats();
             updateStatsUI();
             
-            // Push final data points
             state.wpmHistory.push(state.wpm);
 
-            // Save History
             const record = {
                 date: new Date().toISOString(),
                 difficulty: state.difficulty,
@@ -682,21 +683,17 @@
             if(state.history.length > 10) state.history.pop();
             localStorage.setItem('typingHistory', JSON.stringify(state.history));
 
-            // Show Results
             els.gameView.classList.add('hidden');
             els.resultsView.classList.remove('hidden');
             
             els.resultWpm.textContent = state.wpm;
             
-            // Acc color
             els.resultAcc.textContent = state.accuracy + '%';
             els.resultAcc.className = `text-5xl font-bold mb-1 ${state.accuracy >= 95 ? 'text-emerald-500' : state.accuracy >= 80 ? 'text-yellow-500' : 'text-red-500'}`;
             
             els.resultMistakes.textContent = state.mistakes;
 
             renderHistory();
-            
-            // Render Chart
             setTimeout(drawChart, 100);
         }
 
@@ -706,14 +703,12 @@
 
             const newInput = e.target.value;
             
-            // Track total keystrokes based on input length change (robust for mobile/swipe)
+            // Track total keystrokes (Mobile/Swipe safe)
             const inputDiff = Math.abs(newInput.length - state.userInput.length);
-            // Default to 1 if diff is 0 (unlikely but safe)
             state.totalKeystrokes += inputDiff === 0 ? 1 : inputDiff;
 
-            // Mistake tracking (Cumulative for the counter): If user typed new chars
+            // Mistake tracking
             if (newInput.length > state.userInput.length) {
-                // Loop from the end of the OLD input to the end of the NEW input
                 for (let i = state.userInput.length; i < newInput.length; i++) {
                     if (newInput[i] !== state.targetText[i]) {
                         state.mistakes++;
@@ -739,8 +734,6 @@
                 if(state.userInput[i] === state.targetText[i]) correct++;
             }
 
-            // Accuracy = (Correct Characters) / (Total Physical Keystrokes)
-            // state.totalKeystrokes is updated via handleInput logic now to account for mobile composition
             state.accuracy = state.totalKeystrokes > 0 ? Math.min(100, Math.round((correct / state.totalKeystrokes) * 100)) : 100;
 
             let timeElapsed = 0;
@@ -749,7 +742,7 @@
             }
             if (state.gameState === 'finished') {
                 timeElapsed = TIME_LIMITS[state.difficulty] - state.timeLeft;
-                if(timeElapsed <= 0) timeElapsed = TIME_LIMITS[state.difficulty]; // Timeout case
+                if(timeElapsed <= 0) timeElapsed = TIME_LIMITS[state.difficulty];
             }
 
             if (timeElapsed > 0) {
@@ -766,7 +759,6 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
-            // Handle High DPI
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width * dpr;
@@ -775,9 +767,8 @@
 
             const width = rect.width;
             const height = rect.height;
-            const padding = 60; // Increased padding for dual axis labels
+            const padding = 60;
 
-            // Clear
             ctx.clearRect(0, 0, width, height);
 
             const dataWpm = state.wpmHistory;
@@ -785,54 +776,40 @@
             
             if (dataWpm.length < 2) return;
 
-            // X-Axis Scale: Based on total seconds elapsed (approx wpmHistory.length)
             const totalDuration = dataWpm.length;
-
-            // --- Scales ---
-            const maxWpm = Math.max(...dataWpm, 60); // min scale 60
+            const maxWpm = Math.max(...dataWpm, 60);
             
-            // Find max latency for scaling 
             let maxLat = 0;
             if (rawLat.length > 0) {
                 const vals = rawLat.map(d => d.val);
                 maxLat = Math.max(...vals);
-                // Ensure a reasonable minimum scale so the graph isn't empty if you type super fast
                 if (maxLat < 300) maxLat = 300; 
             } else {
                 maxLat = 300;
             }
 
-            // Helper to get X position for a specific second (WPM)
             const getX_Wpm = (i) => padding + (i / (totalDuration - 1)) * (width - 2 * padding);
             
-            // Helper to get X position for raw time (Latency)
-            // Scale based on the actual max timestamp recorded to ensure it fits the graph width
             const maxLatTime = rawLat.length > 0 ? rawLat[rawLat.length - 1].t : 1;
             const getX_Time = (t) => padding + (t / maxLatTime) * (width - 2 * padding);
             
-            // Y-axis 1: WPM (Left)
             const getY_Wpm = (val) => height - padding - (val / maxWpm) * (height - 2 * padding);
-            
-            // Y-axis 2: Latency (Right)
             const getY_Lat = (val) => height - padding - (val / maxLat) * (height - 2 * padding);
 
-
-            // --- Draw WPM Line (Emerald) ---
             const isDark = document.documentElement.classList.contains('dark');
+            
+            // Draw WPM
             ctx.beginPath();
             ctx.moveTo(getX_Wpm(0), getY_Wpm(dataWpm[0]));
-            
             for (let i = 1; i < dataWpm.length; i++) {
                 ctx.lineTo(getX_Wpm(i), getY_Wpm(dataWpm[i]));
             }
-
-            ctx.strokeStyle = isDark ? '#34d399' : '#059669'; // Emerald
+            ctx.strokeStyle = isDark ? '#34d399' : '#059669';
             ctx.lineWidth = 3;
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // Fill Area WPM
             ctx.lineTo(getX_Wpm(dataWpm.length - 1), height - padding);
             ctx.lineTo(getX_Wpm(0), height - padding);
             ctx.closePath();
@@ -842,67 +819,52 @@
             ctx.fillStyle = gradientWpm;
             ctx.fill();
 
-
-            // --- Draw Raw Latency Line (Amber/Pink) ---
+            // Draw Latency
             if (rawLat.length > 0) {
                 ctx.beginPath();
-                // Move to first point
                 ctx.moveTo(getX_Time(rawLat[0].t), getY_Lat(rawLat[0].val));
-                
                 for (let i = 1; i < rawLat.length; i++) {
                     const pt = rawLat[i];
-                    // Clamp Y to prevent drawing way out of bounds
                     let y = getY_Lat(pt.val);
                     if (y < padding) y = padding; 
-                    
                     ctx.lineTo(getX_Time(pt.t), y);
                 }
-                
-                ctx.strokeStyle = isDark ? 'rgba(251, 113, 133, 0.8)' : 'rgba(225, 29, 72, 0.6)'; // Rose transparent
+                ctx.strokeStyle = isDark ? 'rgba(251, 113, 133, 0.8)' : 'rgba(225, 29, 72, 0.6)';
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
 
-            // --- Grid & Labels ---
+            // Labels
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'right';
             
-            // Left Axis (WPM)
             ctx.fillStyle = isDark ? '#34d399' : '#059669';
             ctx.fillText(maxWpm + ' WPM', padding - 5, padding); 
             ctx.fillText('0', padding - 5, height - padding);
 
-            // Right Axis (Latency)
             ctx.textAlign = 'left';
             ctx.fillStyle = isDark ? '#fb7185' : '#e11d48';
             ctx.fillText(Math.round(maxLat) + 'ms', width - padding + 5, padding);
             ctx.fillText('0ms', width - padding + 5, height - padding);
 
-            // Legend
             ctx.textAlign = 'center';
-            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b'; // Slate
+            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b'; 
             ctx.fillText('Time (seconds)', width / 2, height - 10);
             
-            // Legend Markers (Top Center)
             const mid = width / 2;
             
-            // Green Dot
             ctx.beginPath(); ctx.arc(mid - 80, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#34d399' : '#059669'; ctx.fill();
             ctx.fillStyle = isDark ? '#e2e8f0' : '#334155'; ctx.textAlign = 'left'; ctx.fillText("Speed", mid - 70, 13);
             
-            // Red Dot
             ctx.beginPath(); ctx.arc(mid, 10, 4, 0, Math.PI*2); ctx.fillStyle = isDark ? '#fb7185' : '#e11d48'; ctx.fill();
             ctx.fillText("Delay between key strokes", mid + 10, 13);
         }
 
-        // --- Renderers ---
         function updateStatsUI() {
-            // Time
             const mins = Math.floor(state.timeLeft / 60);
             const secs = state.timeLeft % 60;
             els.time.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
             
-            // Red alert for low time
             if (state.timeLeft < 10 && state.gameState === 'playing') {
                 els.cardTime.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
                 els.time.classList.add('text-red-600');
@@ -911,12 +873,10 @@
                 els.time.classList.remove('text-red-600');
             }
 
-            // Stats
             els.wpm.textContent = state.wpm;
             els.acc.textContent = state.accuracy + '%';
             els.mistakes.textContent = state.mistakes;
 
-            // Mistakes alert
             if (state.mistakes > 0) {
                 els.cardMistakes.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
                 els.mistakes.classList.add('text-red-600');
@@ -952,7 +912,6 @@
                     span.className += 'text-slate-300 dark:text-slate-600';
                 }
 
-                // Cursor
                 if (index === inputLen) {
                     const cursor = document.createElement('span');
                     cursor.className = 'absolute -left-[1px] top-0 bottom-0 w-[2px] animate-pulse-fast bg-emerald-600 dark:bg-emerald-400';
@@ -977,7 +936,6 @@
                 
                 const date = new Date(run.date).toLocaleDateString();
                 
-                // Badge color
                 let badgeClass = '';
                 if(run.difficulty === 'easy') badgeClass = 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400';
                 else if(run.difficulty === 'medium') badgeClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400';
@@ -995,7 +953,6 @@
             });
         }
 
-        // --- Utils ---
         function toggleTheme() {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
@@ -1006,10 +963,7 @@
                 localStorage.theme = 'dark';
                 updateThemeIcons(true);
             }
-            // Re-render to fix difficulty button colors
             setDifficulty(state.difficulty);
-            
-            // Re-render chart if visible (results view active)
             if (!els.resultsView.classList.contains('hidden')) {
                 drawChart();
             }
@@ -1025,9 +979,7 @@
             }
         }
 
-        // Start
         init();
-
     </script>
 </body>
 </html>
